@@ -1,0 +1,5 @@
+{
+  "name": "SIFT Toolbox - AI Analysis",
+  "description": "An interactive UI for performing meticulous software and systems analysis using a powerful generative AI model. Users can input requirements, code, or designs to receive a comprehensive, structured assessment based on the SIFT framework.",
+  "requestFramePermissions": []
+}
