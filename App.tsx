@@ -6,7 +6,7 @@ import AssessmentSidebar from './components/AssessmentSidebar';
 import { streamAnalysis } from './services/geminiService';
 import { MODELS } from './constants';
 import type { AppStatus, Provider, Model, AnalysisSection } from './types';
-import { AlertTriangleIcon } from './components/Icons';
+import { AlertTriangleIcon, ChevronLeftIcon, ChevronRightIcon } from './components/Icons';
 
 const App: React.FC = () => {
   const [userInput, setUserInput] = useState<string>('');
@@ -19,6 +19,7 @@ const App: React.FC = () => {
   
   const [assessmentSections, setAssessmentSections] = useState<AnalysisSection[]>([]);
   const [detailedSections, setDetailedSections] = useState<AnalysisSection[]>([]);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
 
   const handleGenerate = useCallback(async () => {
@@ -67,6 +68,14 @@ const App: React.FC = () => {
         
         {/* Main Content */}
         <div className="w-full flex-grow flex flex-col bg-slate-900/50 relative">
+           <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="absolute top-4 right-4 z-20 bg-slate-800/50 hover:bg-slate-700/70 p-2 rounded-full transition-colors hidden md:flex items-center justify-center"
+            aria-label={isSidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+            title={isSidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
+          >
+            {isSidebarCollapsed ? <ChevronLeftIcon className="h-5 w-5 text-slate-300" /> : <ChevronRightIcon className="h-5 w-5 text-slate-300" />}
+          </button>
           <AnalysisDisplay
             content={analysisResult}
             status={status}
@@ -86,8 +95,14 @@ const App: React.FC = () => {
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-full md:w-[420px] flex-shrink-0 md:h-full border-t md:border-t-0 md:border-l border-slate-800 bg-slate-900">
-            <AssessmentSidebar sections={assessmentSections} />
+        <div className={`
+          w-full flex-shrink-0 md:h-full border-t md:border-t-0 md:border-l border-slate-800 bg-slate-900
+          transition-all duration-300 ease-in-out
+          ${isSidebarCollapsed ? 'md:w-0 md:border-l-0' : 'md:w-[420px]'}
+        `}>
+            <div className="w-full md:w-[420px] h-full overflow-hidden">
+                <AssessmentSidebar sections={assessmentSections} />
+            </div>
         </div>
       </main>
     </div>
