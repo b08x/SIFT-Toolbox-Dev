@@ -41,10 +41,10 @@ const App: React.FC = () => {
   }, [userInput, selectedModel, status]);
 
   return (
-    <div className="flex flex-col h-screen font-sans bg-slate-950 text-slate-200">
+    <div className="flex flex-col min-h-screen font-sans bg-slate-950 text-slate-200">
       <Header />
-      <main className="flex flex-grow overflow-hidden">
-        <div className="w-1/3 h-full border-r border-slate-800 flex-shrink-0 bg-slate-900">
+      <main className="flex flex-col md:flex-row flex-grow">
+        <div className="w-full md:w-1/3 lg:w-[480px] flex-shrink-0 md:h-screen md:sticky md:top-0 border-b md:border-b-0 md:border-r border-slate-800 bg-slate-900">
           <InputPanel
             userInput={userInput}
             setUserInput={setUserInput}
@@ -56,7 +56,7 @@ const App: React.FC = () => {
             status={status}
           />
         </div>
-        <div className="w-2/3 h-full flex flex-col bg-slate-900/50">
+        <div className="w-full md:w-2/3 flex-grow flex flex-col bg-slate-900/50">
           <AnalysisDisplay content={analysisResult} status={status} />
           {status === 'error' && (
             <div className="p-4 border-t border-red-900/50 bg-red-500/10 text-red-300 flex items-start space-x-3">

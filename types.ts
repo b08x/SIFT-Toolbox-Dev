@@ -8,3 +8,10 @@ export interface Model {
 }
 
 export type AppStatus = 'idle' | 'loading' | 'streaming' | 'error';
+
+export type TableRow = Record<string, string>;
+
+export type TableData = {
+  headers: string[];
+  rows: TableRow[];
+};

@@ -7,7 +7,7 @@ const Header = () => {
         <h1 className="text-xl font-semibold text-slate-100">
           SIFT Toolbox
         </h1>
-        <span className="ml-3 text-slate-500 text-sm">Software & Systems Analysis Assistant</span>
+        <span className="ml-3 text-slate-500 text-sm hidden sm:inline">Software & Systems Analysis Assistant</span>
       </div>
     </header>
   );
