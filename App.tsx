@@ -2,9 +2,10 @@ import React, { useState, useCallback, useEffect } from 'react';
 import Header from './components/Header';
 import InputPanel from './components/InputPanel';
 import AnalysisDisplay from './components/AnalysisDisplay';
+import AssessmentSidebar from './components/AssessmentSidebar';
 import { streamAnalysis } from './services/geminiService';
 import { MODELS } from './constants';
-import type { AppStatus, Provider, Model } from './types';
+import type { AppStatus, Provider, Model, AnalysisSection } from './types';
 import { AlertTriangleIcon } from './components/Icons';
 
 const App: React.FC = () => {
@@ -15,6 +16,10 @@ const App: React.FC = () => {
 
   const [selectedProvider, setSelectedProvider] = useState<Provider>(MODELS[0].provider);
   const [selectedModel, setSelectedModel] = useState<string>(MODELS[0].id);
+  
+  const [assessmentSections, setAssessmentSections] = useState<AnalysisSection[]>([]);
+  const [detailedSections, setDetailedSections] = useState<AnalysisSection[]>([]);
+
 
   const handleGenerate = useCallback(async () => {
     if (!userInput.trim()) return;
@@ -22,6 +27,8 @@ const App: React.FC = () => {
     setStatus('loading');
     setAnalysisResult('');
     setError('');
+    setAssessmentSections([]);
+    setDetailedSections([]);
 
     await streamAnalysis(
       userInput,
@@ -60,7 +67,13 @@ const App: React.FC = () => {
         
         {/* Main Content */}
         <div className="w-full flex-grow flex flex-col bg-slate-900/50 relative">
-          <AnalysisDisplay content={analysisResult} status={status} />
+          <AnalysisDisplay
+            content={analysisResult}
+            status={status}
+            detailedSections={detailedSections}
+            setAssessmentSections={setAssessmentSections}
+            setDetailedSections={setDetailedSections}
+          />
           {status === 'error' && (
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-red-900/50 bg-red-950/80 backdrop-blur-sm text-red-300 flex items-start space-x-3">
               <AlertTriangleIcon className="h-5 w-5 mt-0.5 flex-shrink-0 text-red-400" />
@@ -74,10 +87,7 @@ const App: React.FC = () => {
 
         {/* Right Sidebar */}
         <div className="w-full md:w-[420px] flex-shrink-0 md:h-full border-t md:border-t-0 md:border-l border-slate-800 bg-slate-900">
-            <div className="p-6">
-                <h2 className="text-lg font-medium text-slate-200">Assessment Sidebar</h2>
-                <p className="mt-4 text-sm text-slate-500">A summary of the analysis will appear here.</p>
-            </div>
+            <AssessmentSidebar sections={assessmentSections} />
         </div>
       </main>
     </div>

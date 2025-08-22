@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import ReactMarkdown from 'https://esm.sh/react-markdown@9';
 import remarkGfm from 'https://esm.sh/remark-gfm@4';
 import { SparklesIcon, AlertTriangleIcon } from './Icons';
@@ -9,6 +9,9 @@ import type { AppStatus, TableData, TableRow, AnalysisSection } from '../types';
 interface AnalysisDisplayProps {
   content: string;
   status: AppStatus;
+  detailedSections: AnalysisSection[];
+  setAssessmentSections: (sections: AnalysisSection[]) => void;
+  setDetailedSections: (sections: AnalysisSection[]) => void;
 }
 
 const INTERACTIVE_TABLE_SECTIONS = [
@@ -16,6 +19,17 @@ const INTERACTIVE_TABLE_SECTIONS = [
   '⚠️ Identified Issues, Risks & Suggested Improvements',
   '💡 Potential Optimizations/Integrations:',
   '🛠️ Assessment of Resources & Tools:',
+];
+
+const ASSESSMENT_SECTION_TITLES = [
+  'Core Assessment',
+  'Expanded Analysis',
+  'What is the stated goal or problem this system/component addresses?',
+  'What are the key strengths of the current design/proposal?',
+  'What are the primary concerns or weaknesses identified?',
+  'What are the major risks associated with this system/component or proposal?',
+  'What recommendations are made to address concerns and mitigate risks?',
+  'What is the larger architectural or project context?'
 ];
 
 const SkeletonLoader = () => (
@@ -68,9 +82,14 @@ const parseMarkdownTable = (markdown: string): TableData | null => {
 };
 
 
-const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ content, status }) => {
+const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ 
+  content, 
+  status, 
+  detailedSections, 
+  setAssessmentSections, 
+  setDetailedSections 
+}) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [sections, setSections] = useState<AnalysisSection[]>([]);
 
   useEffect(() => {
     if (status === 'idle' && content) {
@@ -100,16 +119,29 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ content, status }) =>
           };
         }).filter(s => s.title);
       
-      setSections(parsedSections);
+      const assessment: AnalysisSection[] = [];
+      const detailed: AnalysisSection[] = [];
+
+      parsedSections.forEach(section => {
+        if (ASSESSMENT_SECTION_TITLES.includes(section.title)) {
+          assessment.push(section);
+        } else {
+          detailed.push(section);
+        }
+      });
+      
+      setAssessmentSections(assessment);
+      setDetailedSections(detailed);
 
     } else if (status !== 'idle') {
-      setSections([]);
+      setAssessmentSections([]);
+      setDetailedSections([]);
     }
 
     if (status === 'streaming' && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [content, status]);
+  }, [content, status, setAssessmentSections, setDetailedSections]);
   
   const getIconForTitle = (title: string): React.ReactNode | undefined => {
       if (title.startsWith('⚠️')) return <AlertTriangleIcon className="w-5 h-5" />;
@@ -130,10 +162,10 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ content, status }) =>
         );
     }
 
-    if (status === 'idle' && sections.length > 0) {
+    if (status === 'idle' && detailedSections.length > 0) {
       return (
         <div className="space-y-6">
-          {sections.map((section) => {
+          {detailedSections.map((section) => {
             const { title, content, isTable } = section;
             return (
               <Card key={title} title={title} icon={getIconForTitle(title)}>
