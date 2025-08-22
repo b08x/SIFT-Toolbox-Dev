@@ -4,13 +4,7 @@ import remarkGfm from 'https://esm.sh/remark-gfm@4';
 import { SparklesIcon, AlertTriangleIcon } from './Icons';
 import Card from './Card';
 import InteractiveTable from './InteractiveTable';
-import type { AppStatus, TableData, TableRow } from '../types';
-
-interface AnalysisSection {
-  title: string;
-  content: string;
-  isTable: boolean;
-}
+import type { AppStatus, TableData, TableRow, AnalysisSection } from '../types';
 
 interface AnalysisDisplayProps {
   content: string;

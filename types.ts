@@ -15,3 +15,9 @@ export type TableData = {
   headers: string[];
   rows: TableRow[];
 };
+
+export interface AnalysisSection {
+  title: string;
+  content: string;
+  isTable: boolean;
+}

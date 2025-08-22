@@ -54,10 +54,11 @@ function parseRepoUrl(url: string): RepoUrl | null {
  * Fetches the content of a file from GitHub's API.
  * The content is expected to be Base64 encoded.
  * @param fileUrl The API URL for the file blob.
+ * @param headers The headers to use for the fetch request.
  * @returns The decoded file content as a string.
  */
-async function getFileContent(fileUrl: string): Promise<string> {
-    const response = await fetch(fileUrl);
+async function getFileContent(fileUrl: string, headers: HeadersInit): Promise<string> {
+    const response = await fetch(fileUrl, { headers });
     if (!response.ok) {
         throw new Error(`Failed to fetch file content from ${fileUrl}: ${response.statusText}`);
     }
@@ -75,11 +76,13 @@ async function getFileContent(fileUrl: string): Promise<string> {
  * Main function to import a public GitHub repository and format its content as a single string.
  * @param repoUrl The URL of the public GitHub repository.
  * @param onProgress A callback to report progress updates.
+ * @param token An optional GitHub Personal Access Token.
  * @returns A promise that resolves to the formatted string content, file count, and repo name.
  */
 export async function importRepoToString(
     repoUrl: string,
-    onProgress: (message: string) => void
+    onProgress: (message: string) => void,
+    token?: string
 ): Promise<{ content: string, fileCount: number, repoName: string }> {
 
     const parsed = parseRepoUrl(repoUrl);
@@ -89,8 +92,13 @@ export async function importRepoToString(
     const { owner, repo } = parsed;
     onProgress(`Fetching file list for ${owner}/${repo}...`);
 
+    const headers: HeadersInit = {};
+    if (token) {
+        headers['Authorization'] = `token ${token}`;
+    }
+
     // 1. Get repo info to find the default branch
-    const repoInfoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+    const repoInfoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
     if (!repoInfoResponse.ok) {
         const status = repoInfoResponse.status;
         let errorMessage = `Failed to fetch repository info: ${repoInfoResponse.statusText} (Status: ${status}).`;
@@ -103,10 +111,12 @@ export async function importRepoToString(
                 if (body && body.message) {
                     errorMessage = `GitHub API Error: ${body.message}`;
                     if (body.message.toLowerCase().includes('rate limit')) {
-                        errorMessage += " The limit for unauthenticated requests is low. Please wait a while before trying again.";
+                        errorMessage += token 
+                            ? " The provided token may be invalid or expired." 
+                            : " The limit for unauthenticated requests is low. Please provide a Personal Access Token or wait a while before trying again.";
                     }
                 } else {
-                    errorMessage = "Access to the repository is forbidden (Status: 403). This is often due to API rate limiting. Please wait a while before trying again.";
+                    errorMessage = "Access to the repository is forbidden (Status: 403). This is often due to API rate limiting.";
                 }
             } catch (e) {
                 errorMessage = "Access to the repository is forbidden (Status: 403) and the error details could not be read. This is often due to API rate limiting.";
@@ -119,7 +129,7 @@ export async function importRepoToString(
 
     // 2. Fetch the file tree recursively
     const treeUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${defaultBranch}?recursive=1`;
-    const treeResponse = await fetch(treeUrl);
+    const treeResponse = await fetch(treeUrl, { headers });
 
     if (!treeResponse.ok) {
        const status = treeResponse.status;
@@ -133,7 +143,9 @@ export async function importRepoToString(
                 if (body && body.message) {
                     errorMessage = `GitHub API Error while fetching file list: ${body.message}`;
                      if (body.message.toLowerCase().includes('rate limit')) {
-                        errorMessage += " The limit for unauthenticated requests is low. Please wait a while and try again.";
+                        errorMessage += token 
+                            ? " The provided token may be invalid or expired."
+                            : " The limit for unauthenticated requests is low. Please provide a Personal Access Token or wait a while and try again.";
                     }
                 } else {
                     errorMessage = "Access to the repository file list is forbidden (Status: 403). This is often due to API rate limiting.";
@@ -172,7 +184,7 @@ export async function importRepoToString(
     let fullContent = `Analyzing repository: ${owner}/${repo}\nBranch: ${defaultBranch}\nTotal files included: ${filesToFetch.length}\n\n`;
     const contentPromises = filesToFetch.map(async file => {
         try {
-            const fileContent = await getFileContent(file.url);
+            const fileContent = await getFileContent(file.url, headers);
             return `--- START OF FILE: ${file.path} ---\n\n${fileContent}\n\n--- END OF FILE: ${file.path} ---\n\n`;
         } catch (error) {
             console.error(`Skipping file ${file.path} due to error:`, error);
