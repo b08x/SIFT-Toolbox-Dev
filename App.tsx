@@ -44,6 +44,7 @@ const App: React.FC = () => {
     <div className="flex flex-col min-h-screen font-sans bg-slate-950 text-slate-200">
       <Header />
       <main className="flex flex-col md:flex-row flex-grow h-[calc(100vh-65px)]">
+        {/* Left Sidebar */}
         <div className="w-full md:w-[450px] lg:w-[480px] flex-shrink-0 md:h-full border-b md:border-b-0 md:border-r border-slate-800 bg-slate-900">
           <InputPanel
             userInput={userInput}
@@ -56,6 +57,8 @@ const App: React.FC = () => {
             status={status}
           />
         </div>
+        
+        {/* Main Content */}
         <div className="w-full flex-grow flex flex-col bg-slate-900/50 relative">
           <AnalysisDisplay content={analysisResult} status={status} />
           {status === 'error' && (
@@ -67,6 +70,14 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="w-full md:w-[420px] flex-shrink-0 md:h-full border-t md:border-t-0 md:border-l border-slate-800 bg-slate-900">
+            <div className="p-6">
+                <h2 className="text-lg font-medium text-slate-200">Assessment Sidebar</h2>
+                <p className="mt-4 text-sm text-slate-500">A summary of the analysis will appear here.</p>
+            </div>
         </div>
       </main>
     </div>
