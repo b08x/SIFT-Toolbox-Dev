@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SparklesIcon, GitBranchIcon, AlertTriangleIcon } from './Icons';
 import { MODELS } from '../constants';
@@ -79,10 +78,10 @@ const InputPanel: React.FC<InputPanelProps> = ({
         setRepoError('');
         setRepoSuccess('');
       }}
-      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
         inputMode === mode
-          ? 'bg-gray-800 border-b-2 border-blue-500 text-white'
-          : 'bg-gray-900/50 text-gray-400 hover:bg-gray-700'
+          ? 'border-b-2 border-blue-500 text-slate-100'
+          : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
       }`}
     >
       {label}
@@ -90,8 +89,8 @@ const InputPanel: React.FC<InputPanelProps> = ({
   );
 
   return (
-    <div className="flex flex-col h-full bg-gray-800/50">
-      <div className="px-4 border-b border-gray-700">
+    <div className="flex flex-col h-full">
+      <div className="px-4 border-b border-slate-800">
          <div className="-mb-px flex space-x-2">
             <TabButton mode="manual" label="Manual Input" />
             <TabButton mode="github" label="Import from GitHub" />
@@ -101,12 +100,12 @@ const InputPanel: React.FC<InputPanelProps> = ({
       <div className="flex-grow p-4 space-y-4 overflow-y-auto">
         {inputMode === 'manual' && (
           <>
-            <h2 className="text-xl font-semibold text-white">Input Artifacts</h2>
-            <p className="text-sm text-gray-400">
+            <h2 className="text-lg font-medium text-slate-200">Input Artifacts</h2>
+            <p className="text-sm text-slate-400">
               Provide requirements, code snippets, architecture diagrams, or technical challenges for analysis.
             </p>
             {repoSuccess && (
-              <div className="p-3 bg-green-500/10 text-green-300 border border-green-700 rounded-md text-sm">
+              <div className="p-3 bg-teal-500/10 text-teal-300 border border-teal-900/50 rounded-md text-sm">
                 {repoSuccess}
               </div>
             )}
@@ -118,7 +117,7 @@ const InputPanel: React.FC<InputPanelProps> = ({
                   if (repoSuccess) setRepoSuccess('');
                 }}
                 placeholder="Paste your code, design document, or requirements here..."
-                className="w-full flex-grow bg-gray-900/70 border border-gray-700 rounded-md p-3 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none font-mono text-sm"
+                className="w-full flex-grow bg-slate-800/50 border border-slate-700 rounded-md p-3 text-slate-300 focus:border-blue-500 focus:outline-none focus:ring-0 resize-none font-mono text-sm transition-colors"
                 disabled={isLoading}
               />
             </div>
@@ -127,12 +126,12 @@ const InputPanel: React.FC<InputPanelProps> = ({
 
         {inputMode === 'github' && (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white">Import from GitHub</h2>
-            <p className="text-sm text-gray-400">
-              Enter the URL of a <span className="font-semibold text-yellow-300">public</span> GitHub repository to analyze its codebase.
+            <h2 className="text-lg font-medium text-slate-200">Import from GitHub</h2>
+            <p className="text-sm text-slate-400">
+              Enter the URL of a <span className="font-semibold text-amber-400">public</span> GitHub repository to analyze its codebase.
             </p>
             <div>
-              <label htmlFor="repo-url" className="block text-sm font-medium text-gray-300 mb-1">
+              <label htmlFor="repo-url" className="block text-sm font-medium text-slate-300 mb-1">
                 Repository URL
               </label>
               <input
@@ -141,14 +140,14 @@ const InputPanel: React.FC<InputPanelProps> = ({
                 value={repoUrl}
                 onChange={(e) => setRepoUrl(e.target.value)}
                 placeholder="https://github.com/owner/repo"
-                className="w-full bg-gray-900/70 border border-gray-700 rounded-md p-2 text-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full bg-slate-800/50 border border-slate-700 rounded-md p-2 text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-0 transition-colors"
                 disabled={!!repoLoadingMessage}
               />
             </div>
             <button
               onClick={handleLoadRepo}
               disabled={!!repoLoadingMessage || isLoading}
-              className="w-full flex items-center justify-center p-3 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full flex items-center justify-center p-3 font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-indigo-500"
             >
               {repoLoadingMessage ? (
                 <>
@@ -167,8 +166,8 @@ const InputPanel: React.FC<InputPanelProps> = ({
             </button>
 
             {repoError && (
-              <div className="p-3 bg-red-500/10 text-red-300 border border-red-900 rounded-md text-sm flex items-start space-x-2">
-                <AlertTriangleIcon className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div className="p-3 bg-red-500/10 text-red-300 border border-red-900/50 rounded-md text-sm flex items-start space-x-2">
+                <AlertTriangleIcon className="h-5 w-5 flex-shrink-0 mt-0.5 text-red-400" />
                 <span>{repoError}</span>
               </div>
             )}
@@ -176,16 +175,16 @@ const InputPanel: React.FC<InputPanelProps> = ({
         )}
       </div>
 
-      <div className="p-4 border-t border-gray-700 space-y-4">
+      <div className="p-4 border-t border-slate-800 space-y-4">
         <div className="flex-grow">
-          <label htmlFor="model-select" className="block text-sm font-medium text-gray-300 mb-1">
+          <label htmlFor="model-select" className="block text-sm font-medium text-slate-300 mb-1">
             Model
           </label>
           <select
             id="model-select"
             value={selectedModel}
             onChange={handleModelChange}
-            className="w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full bg-slate-800 border border-slate-700 rounded-md p-2 text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-0 transition-colors"
             disabled={isLoading}
           >
             {MODELS.map((model) => (
@@ -199,7 +198,7 @@ const InputPanel: React.FC<InputPanelProps> = ({
         <button
           onClick={handleGenerate}
           disabled={isLoading || !userInput.trim()}
-          className="w-full flex items-center justify-center p-3 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-200"
+          className="w-full flex items-center justify-center p-3 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-400 disabled:cursor-not-allowed transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-blue-500"
         >
           {isLoading ? (
             <>

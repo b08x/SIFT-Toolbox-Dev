@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import Header from './components/Header';
 import InputPanel from './components/InputPanel';
@@ -42,10 +41,10 @@ const App: React.FC = () => {
   }, [userInput, selectedModel, status]);
 
   return (
-    <div className="flex flex-col h-screen font-sans bg-gray-900 text-gray-200">
+    <div className="flex flex-col h-screen font-sans bg-slate-950 text-slate-200">
       <Header />
       <main className="flex flex-grow overflow-hidden">
-        <div className="w-1/3 h-full border-r border-gray-700 flex-shrink-0">
+        <div className="w-1/3 h-full border-r border-slate-800 flex-shrink-0 bg-slate-900">
           <InputPanel
             userInput={userInput}
             setUserInput={setUserInput}
@@ -57,14 +56,14 @@ const App: React.FC = () => {
             status={status}
           />
         </div>
-        <div className="w-2/3 h-full flex flex-col bg-gray-800">
+        <div className="w-2/3 h-full flex flex-col bg-slate-900/50">
           <AnalysisDisplay content={analysisResult} status={status} />
           {status === 'error' && (
-            <div className="p-4 border-t border-red-900 bg-red-500/10 text-red-300 flex items-start space-x-3">
-              <AlertTriangleIcon className="h-5 w-5 mt-1 flex-shrink-0" />
+            <div className="p-4 border-t border-red-900/50 bg-red-500/10 text-red-300 flex items-start space-x-3">
+              <AlertTriangleIcon className="h-5 w-5 mt-0.5 flex-shrink-0 text-red-400" />
               <div>
-                <p className="font-semibold">An Error Occurred</p>
-                <p className="text-sm">{error}</p>
+                <p className="font-semibold text-red-300">An Error Occurred</p>
+                <p className="text-sm text-red-400">{error}</p>
               </div>
             </div>
           )}
