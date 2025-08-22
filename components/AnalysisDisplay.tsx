@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import ReactMarkdown from 'https://esm.sh/react-markdown@9';
 import remarkGfm from 'https://esm.sh/remark-gfm@4';
@@ -134,7 +133,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ content, status }) =>
   };
   
   return (
-    <div ref={scrollRef} className="flex-grow p-6 overflow-y-auto">
+    <div ref={scrollRef} className="flex-grow p-8 overflow-y-auto">
       {renderContent()}
     </div>
   );

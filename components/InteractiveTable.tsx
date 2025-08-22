@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { TableData, TableRow } from '../types';
 import { ChevronsUpDown, ChevronUp, ChevronDown } from './Icons';
@@ -92,8 +91,8 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ tableData }) => {
   };
 
   return (
-    <div className="not-prose my-6">
-      <div className="mb-4">
+    <div className="not-prose my-8">
+      <div className="mb-6">
         <input
           type="text"
           value={filter}
@@ -107,7 +106,7 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ tableData }) => {
           <thead className="bg-slate-800/75 text-xs text-slate-300 uppercase">
             <tr>
               {tableData.headers.map((header) => (
-                <th key={header} scope="col" className="px-4 py-3">
+                <th key={header} scope="col" className="px-6 py-4">
                   <button
                     onClick={() => requestSort(header)}
                     className="flex items-center w-full text-left font-semibold"
@@ -123,7 +122,7 @@ const InteractiveTable: React.FC<InteractiveTableProps> = ({ tableData }) => {
             {filteredAndSortedRows.map((row, rowIndex) => (
               <tr key={rowIndex} className="border-b border-slate-800 last:border-b-0 hover:bg-slate-800/50">
                 {tableData.headers.map((header, cellIndex) => (
-                  <td key={`${rowIndex}-${cellIndex}`} className="px-4 py-3 align-top">
+                  <td key={`${rowIndex}-${cellIndex}`} className="px-6 py-4 align-top">
                      {/* Use pre-wrap to respect newlines but wrap long lines */}
                     <span className="whitespace-pre-wrap">{row[header]}</span>
                   </td>

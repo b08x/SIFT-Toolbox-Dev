@@ -90,14 +90,14 @@ const InputPanel: React.FC<InputPanelProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 border-b border-slate-800">
+      <div className="px-6 border-b border-slate-800">
          <div className="-mb-px flex space-x-2">
             <TabButton mode="manual" label="Manual Input" />
             <TabButton mode="github" label="Import from GitHub" />
         </div>
       </div>
       
-      <div className="flex-grow p-4 space-y-4 overflow-y-auto">
+      <div className="flex-grow p-6 space-y-6 overflow-y-auto">
         {inputMode === 'manual' && (
           <>
             <h2 className="text-lg font-medium text-slate-200">Input Artifacts</h2>
@@ -125,7 +125,7 @@ const InputPanel: React.FC<InputPanelProps> = ({
         )}
 
         {inputMode === 'github' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h2 className="text-lg font-medium text-slate-200">Import from GitHub</h2>
             <p className="text-sm text-slate-400">
               Enter the URL of a <span className="font-semibold text-amber-400">public</span> GitHub repository to analyze its codebase.
@@ -175,7 +175,7 @@ const InputPanel: React.FC<InputPanelProps> = ({
         )}
       </div>
 
-      <div className="p-4 border-t border-slate-800 space-y-4">
+      <div className="p-6 border-t border-slate-800 space-y-6">
         <div className="flex-grow">
           <label htmlFor="model-select" className="block text-sm font-medium text-slate-300 mb-1">
             Model
