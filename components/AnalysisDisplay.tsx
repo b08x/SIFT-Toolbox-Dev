@@ -1,9 +1,14 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'https://esm.sh/react-markdown@9';
 import remarkGfm from 'https://esm.sh/remark-gfm@4';
 import { SparklesIcon } from './Icons';
-import InteractiveTable from './InteractiveTable';
-import type { AppStatus, TableData } from '../types';
+import type { AppStatus } from '../types';
+
+interface AnalysisSection {
+  title: string;
+  content: string;
+  isTable: boolean;
+}
 
 interface AnalysisDisplayProps {
   content: string;
@@ -14,25 +19,6 @@ const INTERACTIVE_TABLE_SECTIONS = [
   '💡 Potential Optimizations/Integrations:',
   '🛠️ Assessment of Resources & Tools:',
 ];
-
-// Helper to parse a markdown table string into a structured object
-const parseMarkdownTable = (tableString: string): TableData | null => {
-  const lines = tableString.trim().split('\n');
-  if (lines.length < 2) return null;
-
-  const headers = lines[0].split('|').map(h => h.trim()).filter(Boolean);
-  const rows = lines.slice(2).map(line => {
-    const cells = line.split('|').map(c => c.trim()).filter(Boolean);
-    const rowData: Record<string, string> = {};
-    headers.forEach((header, index) => {
-      rowData[header] = cells[index] || '';
-    });
-    return rowData;
-  });
-
-  return { headers, rows };
-};
-
 
 const SkeletonLoader = () => (
   <div className="space-y-6 animate-pulse">
@@ -58,51 +44,46 @@ const EmptyState = () => (
 
 const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ content, status }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [processedContent, setProcessedContent] = useState(content);
-  const [interactiveTables, setInteractiveTables] = useState<Record<string, TableData>>({});
+  const [sections, setSections] = useState<AnalysisSection[]>([]);
 
   useEffect(() => {
-    // Only process the content when the streaming is done to avoid re-rendering on each chunk.
+    // Only process the content into sections when streaming is complete.
     if (status === 'idle' && content) {
-      let tempContent = content;
-      const newTables: Record<string, TableData> = {};
-      let tableIndex = 0;
+      const rawSections = content.split(/\n(?=###\s)/);
 
-      INTERACTIVE_TABLE_SECTIONS.forEach(header => {
-        const sectionRegex = new RegExp(`(### ${header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s\\S]*?)(?=\\n###|$)`);
-        const sectionMatch = tempContent.match(sectionRegex);
-        if (!sectionMatch) return;
+      const parsedSections: AnalysisSection[] = rawSections
+        .map(chunk => chunk.trim())
+        .filter(Boolean)
+        .map(chunk => {
+          const lines = chunk.split('\n');
+          const titleLine = lines.shift() || '';
+          const sectionContent = lines.join('\n');
+          
+          const cleanTitle = titleLine.replace(/^###\s*/, '').trim();
+          
+          const isTable = INTERACTIVE_TABLE_SECTIONS.some(tableHeader => 
+            cleanTitle.startsWith(tableHeader)
+          );
 
-        const section = sectionMatch[0];
-        const tableRegex = /(\|[^\n]+\|\r?\n\|[ \t-:]+\|\r?\n(?:\|[^\n]+\|\r?\n?)*)/g;
-        const tableMatch = section.match(tableRegex);
-
-        if (tableMatch) {
-          const tableMarkdown = tableMatch[0];
-          const parsedTable = parseMarkdownTable(tableMarkdown);
-          if (parsedTable) {
-            const tableId = `interactive-table-${tableIndex++}`;
-            newTables[tableId] = parsedTable;
-            tempContent = tempContent.replace(tableMarkdown, `<div id="${tableId}"></div>`);
-          }
-        }
-      });
+          return {
+            title: cleanTitle,
+            content: sectionContent,
+            isTable: isTable,
+          };
+        });
       
-      setInteractiveTables(newTables);
-      setProcessedContent(tempContent);
-    } else if (status === 'streaming') {
-      // While streaming, just show the raw content
-      setProcessedContent(content);
-      setInteractiveTables({});
+      setSections(parsedSections);
+
+    } else if (status !== 'idle') {
+      // Clear sections when a new analysis starts or is in progress.
+      setSections([]);
     }
-  }, [content, status]);
 
-
-  useEffect(() => {
+    // Autoscroll during streaming
     if (status === 'streaming' && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [processedContent, status]);
+  }, [content, status]);
 
   const renderContent = () => {
     if (status === 'loading') {
@@ -111,23 +92,14 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ content, status }) =>
     if (status === 'idle' && !content) {
       return <EmptyState />;
     }
+    // For now, render the entire raw markdown content.
+    // The parsed `sections` state is ready for the next step of rendering into cards.
     return (
        <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         className="prose prose-invert max-w-none"
-        components={{
-            div: ({ node, ...props }) => {
-                const id = props.id as string;
-                if (id && interactiveTables[id]) {
-                    return <InteractiveTable tableData={interactiveTables[id]} />;
-                }
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                return <div {...props} />;
-            },
-        }}
       >
-        {processedContent}
+        {content}
       </ReactMarkdown>
     );
   };
