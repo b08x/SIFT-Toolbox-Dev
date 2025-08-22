@@ -1,4 +1,3 @@
-
 // A list of file extensions to include in the analysis.
 // This helps to filter out binary files, images, etc.
 const INCLUDED_EXTENSIONS = new Set([
@@ -90,13 +89,30 @@ export async function importRepoToString(
     const { owner, repo } = parsed;
     onProgress(`Fetching file list for ${owner}/${repo}...`);
 
-    // 1. Get the SHA of the latest commit on the main/master branch
+    // 1. Get repo info to find the default branch
     const repoInfoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
     if (!repoInfoResponse.ok) {
-        if (repoInfoResponse.status === 404) {
-             throw new Error("Repository not found. Please check the URL and ensure it's a public repository.");
+        const status = repoInfoResponse.status;
+        let errorMessage = `Failed to fetch repository info: ${repoInfoResponse.statusText} (Status: ${status}).`;
+
+        if (status === 404) {
+            errorMessage = "Repository not found. Please check the URL and ensure it's a public repository.";
+        } else if (status === 403) {
+            try {
+                const body = await repoInfoResponse.json();
+                if (body && body.message) {
+                    errorMessage = `GitHub API Error: ${body.message}`;
+                    if (body.message.toLowerCase().includes('rate limit')) {
+                        errorMessage += " The limit for unauthenticated requests is low. Please wait a while before trying again.";
+                    }
+                } else {
+                    errorMessage = "Access to the repository is forbidden (Status: 403). This is often due to API rate limiting. Please wait a while before trying again.";
+                }
+            } catch (e) {
+                errorMessage = "Access to the repository is forbidden (Status: 403) and the error details could not be read. This is often due to API rate limiting.";
+            }
         }
-        throw new Error(`Failed to fetch repository info: ${repoInfoResponse.statusText}`);
+        throw new Error(errorMessage);
     }
     const repoInfo = await repoInfoResponse.json();
     const defaultBranch = repoInfo.default_branch || 'main';
@@ -106,7 +122,27 @@ export async function importRepoToString(
     const treeResponse = await fetch(treeUrl);
 
     if (!treeResponse.ok) {
-        throw new Error(`Failed to fetch file tree: ${treeResponse.statusText}`);
+       const status = treeResponse.status;
+        let errorMessage = `Failed to fetch file tree: ${treeResponse.statusText} (Status: ${status}).`;
+        
+        if (status === 404) {
+            errorMessage = `Could not find the default branch ('${defaultBranch}'). The repository might be empty or the branch name is incorrect.`;
+        } else if (status === 403) {
+            try {
+                const body = await treeResponse.json();
+                if (body && body.message) {
+                    errorMessage = `GitHub API Error while fetching file list: ${body.message}`;
+                     if (body.message.toLowerCase().includes('rate limit')) {
+                        errorMessage += " The limit for unauthenticated requests is low. Please wait a while and try again.";
+                    }
+                } else {
+                    errorMessage = "Access to the repository file list is forbidden (Status: 403). This is often due to API rate limiting.";
+                }
+            } catch (e) {
+                errorMessage = "Access to the repository file list is forbidden (Status: 403) and the error details could not be read. This is often due to API rate limiting.";
+            }
+        }
+        throw new Error(errorMessage);
     }
     const treeData = await treeResponse.json();
 

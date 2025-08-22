@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'https://esm.sh/react-markdown@9';
 import remarkGfm from 'https://esm.sh/remark-gfm@4';
-import { SparklesIcon } from './Icons';
-import type { AppStatus } from '../types';
+import { SparklesIcon, AlertTriangleIcon } from './Icons';
+import Card from './Card';
+import InteractiveTable from './InteractiveTable';
+import type { AppStatus, TableData, TableRow } from '../types';
 
 interface AnalysisSection {
   title: string;
@@ -16,21 +18,18 @@ interface AnalysisDisplayProps {
 }
 
 const INTERACTIVE_TABLE_SECTIONS = [
+  '✅ Verified Specifications/Components',
+  '⚠️ Identified Issues, Risks & Suggested Improvements',
   '💡 Potential Optimizations/Integrations:',
   '🛠️ Assessment of Resources & Tools:',
 ];
 
 const SkeletonLoader = () => (
   <div className="space-y-6 animate-pulse">
-    <div className="h-8 bg-slate-800 rounded-md w-1/3"></div>
-    <div className="space-y-3">
-      <div className="h-4 bg-slate-800 rounded-md w-full"></div>
-      <div className="h-4 bg-slate-800 rounded-md w-5/6"></div>
-    </div>
-    <div className="h-6 bg-slate-800 rounded-md w-1/4"></div>
-    <div className="h-32 bg-slate-800 rounded-md w-full"></div>
-    <div className="h-6 bg-slate-800 rounded-md w-1/4"></div>
-    <div className="h-24 bg-slate-800 rounded-md w-full"></div>
+    <div className="h-16 bg-slate-800 rounded-lg w-full"></div>
+    <div className="h-48 bg-slate-800 rounded-lg w-full"></div>
+    <div className="h-32 bg-slate-800 rounded-lg w-full"></div>
+    <div className="h-40 bg-slate-800 rounded-lg w-full"></div>
   </div>
 );
 
@@ -42,24 +41,59 @@ const EmptyState = () => (
   </div>
 );
 
+const parseMarkdownTable = (markdown: string): TableData | null => {
+    const lines = markdown.trim().split('\n').filter(line => line.trim() !== '');
+    if (lines.length < 2) return null;
+
+    const headerLine = lines[0];
+    const separatorLine = lines[1];
+
+    if (!separatorLine.match(/\|.*-.*\|/)) return null;
+
+    const headers = headerLine
+        .split('|')
+        .map(h => h.trim())
+        .filter(Boolean);
+
+    const rows: TableRow[] = lines.slice(2).map(line => {
+        const cells = line
+            .split('|')
+            .map(c => c.trim())
+            .filter((c, i, arr) => i > 0 && i < arr.length - 1); // Remove first and last empty cells from split
+
+        const row: TableRow = {};
+        headers.forEach((header, index) => {
+            row[header] = cells[index] || '';
+        });
+        return row;
+    }).filter(row => Object.values(row).some(cell => cell.trim() !== ''));
+
+    if (headers.length === 0 || rows.length === 0) return null;
+
+    return { headers, rows };
+};
+
+
 const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ content, status }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [sections, setSections] = useState<AnalysisSection[]>([]);
 
   useEffect(() => {
-    // Only process the content into sections when streaming is complete.
     if (status === 'idle' && content) {
-      const rawSections = content.split(/\n(?=###\s)/);
+      // Split by markdown horizontal rules (***, ---, ___) or by any markdown header (##, ###, etc.)
+      const rawSections = content.split(/\n\s*(?:\*|-|_){3,}\s*\n|\n(?=##+\s)/);
 
       const parsedSections: AnalysisSection[] = rawSections
         .map(chunk => chunk.trim())
         .filter(Boolean)
         .map(chunk => {
           const lines = chunk.split('\n');
-          const titleLine = lines.shift() || '';
-          const sectionContent = lines.join('\n');
+          // Find the first line that is a markdown header
+          const titleLine = lines.find(line => line.match(/^##+\s/)) || '';
+          const sectionContent = chunk.replace(titleLine, '').trim();
           
-          const cleanTitle = titleLine.replace(/^###\s*/, '').trim();
+          // Clean the markdown characters from the title
+          const cleanTitle = titleLine.replace(/^##+\s*/, '').trim();
           
           const isTable = INTERACTIVE_TABLE_SECTIONS.some(tableHeader => 
             cleanTitle.startsWith(tableHeader)
@@ -70,42 +104,82 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ content, status }) =>
             content: sectionContent,
             isTable: isTable,
           };
-        });
+        }).filter(s => s.title);
       
       setSections(parsedSections);
 
     } else if (status !== 'idle') {
-      // Clear sections when a new analysis starts or is in progress.
       setSections([]);
     }
 
-    // Autoscroll during streaming
     if (status === 'streaming' && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [content, status]);
+  
+  const getIconForTitle = (title: string): React.ReactNode | undefined => {
+      if (title.startsWith('⚠️')) return <AlertTriangleIcon className="w-5 h-5" />;
+      if (title.startsWith('💡')) return <SparklesIcon className="w-5 h-5" />;
+      return undefined;
+  };
 
   const renderContent = () => {
     if (status === 'loading') {
       return <SkeletonLoader />;
     }
+    
+    if (status === 'streaming') {
+        return (
+            <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose prose-invert max-w-none">
+                {content}
+            </ReactMarkdown>
+        );
+    }
+
+    if (status === 'idle' && sections.length > 0) {
+      return (
+        <div className="space-y-6">
+          {sections.map((section) => {
+            const { title, content, isTable } = section;
+            return (
+              <Card key={title} title={title} icon={getIconForTitle(title)}>
+                {isTable ? (
+                  (() => {
+                    const tableData = parseMarkdownTable(content);
+                    return tableData ? (
+                      <InteractiveTable tableData={tableData} />
+                    ) : (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose prose-invert max-w-none">
+                        {`_Could not parse table data._\n\n${content}`}
+                      </ReactMarkdown>
+                    );
+                  })()
+                ) : (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose prose-invert max-w-none">
+                    {content}
+                  </ReactMarkdown>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      );
+    }
+    
     if (status === 'idle' && !content) {
       return <EmptyState />;
     }
-    // For now, render the entire raw markdown content.
-    // The parsed `sections` state is ready for the next step of rendering into cards.
+
+    // Fallback for raw content if no sections are parsed
     return (
-       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        className="prose prose-invert max-w-none"
-      >
+       <ReactMarkdown remarkPlugins={[remarkGfm]} className="prose prose-invert max-w-none">
         {content}
       </ReactMarkdown>
     );
   };
   
   return (
-    <div ref={scrollRef} className="flex-grow p-8 overflow-y-auto">
+    <div ref={scrollRef} className="flex-grow p-6 sm:p-8 overflow-y-auto">
       {renderContent()}
     </div>
   );

@@ -43,8 +43,8 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-950 text-slate-200">
       <Header />
-      <main className="flex flex-col md:flex-row flex-grow">
-        <div className="w-full md:w-1/3 lg:w-[480px] flex-shrink-0 md:h-screen md:sticky md:top-0 border-b md:border-b-0 md:border-r border-slate-800 bg-slate-900">
+      <main className="flex flex-col md:flex-row flex-grow h-[calc(100vh-65px)]">
+        <div className="w-full md:w-[450px] lg:w-[480px] flex-shrink-0 md:h-full border-b md:border-b-0 md:border-r border-slate-800 bg-slate-900">
           <InputPanel
             userInput={userInput}
             setUserInput={setUserInput}
@@ -56,10 +56,10 @@ const App: React.FC = () => {
             status={status}
           />
         </div>
-        <div className="w-full md:w-2/3 flex-grow flex flex-col bg-slate-900/50">
+        <div className="w-full flex-grow flex flex-col bg-slate-900/50 relative">
           <AnalysisDisplay content={analysisResult} status={status} />
           {status === 'error' && (
-            <div className="p-4 border-t border-red-900/50 bg-red-500/10 text-red-300 flex items-start space-x-3">
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-red-900/50 bg-red-950/80 backdrop-blur-sm text-red-300 flex items-start space-x-3">
               <AlertTriangleIcon className="h-5 w-5 mt-0.5 flex-shrink-0 text-red-400" />
               <div>
                 <p className="font-semibold text-red-300">An Error Occurred</p>
